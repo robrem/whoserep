@@ -1,0 +1,2 @@
+# WhoseRep
+The [@WhoseRep](https://twitter.com/WhoseRep "WhoseRep Twitter page") Twitter bot uses [OpenSecrets.org](https://www.opensecrets.org "Open Secrets home page")'s data and [APIs](https://www.opensecrets.org/resources/create/apis.php "Open Secrets APIs page") to report campaign contributions made to US government representatives.
