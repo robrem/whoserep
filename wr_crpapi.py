@@ -78,6 +78,12 @@ class CRP(object):
             result = CRP._apicall('CandIndByInd', kwargs)['candIndus']
             return result['@attributes']
 
+    class getLegislators(object):
+        @staticmethod
+        def get(**kwargs):
+            results = CRP._apicall('getLegislators', kwargs)['legislator']
+            return results
+
     class memTravelTrips(object):
         @staticmethod
         def get(**kwargs):
