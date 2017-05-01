@@ -52,7 +52,7 @@ def create_tweet():
   contrib_amount = c_dict[0]['@attributes']['total']
 
   # Form tweet text
-  text = 'Representative %s (%s-%s) received $%s from %s.' % \
+  text = 'Representative %s (%s-%s) received $%s from %s. src: OpenSecrets.org' % \
           (l_firstlast, l_party, state, contrib_amount, contrib_name)
   return text
 
