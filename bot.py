@@ -59,9 +59,12 @@ def create_tweet():
   contrib_name = c_dict[0]['@attributes']['org_name']
   contrib_amount = c_dict[0]['@attributes']['total']
 
+  # Hash tags
+  hash_tags = "#MoneyinPolitics"
+
   # Form tweet text
-  text = 'Representative %s (%s-%s) received $%s from %s. src: OpenSecrets.org' % \
-          (l_firstlast, l_party, state, contrib_amount, contrib_name)
+  text = 'Representative %s (%s-%s) received $%s from %s. src: OpenSecrets.org %s' % \
+          (l_firstlast, l_party, state, contrib_amount, contrib_name, hash_tags)
   return text
 
 
