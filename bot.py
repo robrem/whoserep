@@ -5,7 +5,7 @@ import random
 from wr_crpapi import CRP, CRPApiError
 from time import gmtime, strftime
 try: 
-  from auth import *
+  from config import *
 except ImportError:
   TWITTER_ACCESS_TOKEN = os.environ['TWITTER_ACCESS_TOKEN']
   TWITTER_ACCESS_TOKEN_SECRET = os.environ['TWITTER_ACCESS_TOKEN_SECRET']
