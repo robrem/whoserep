@@ -2,9 +2,16 @@ import os
 import tweepy
 import json
 import random
-from auth import *
 from wr_crpapi import CRP, CRPApiError
 from time import gmtime, strftime
+try: 
+  from auth import *
+except ImportError:
+  TWITTER_ACCESS_TOKEN = os.environ['TWITTER_ACCESS_TOKEN']
+  TWITTER_ACCESS_TOKEN_SECRET = os.environ['TWITTER_ACCESS_TOKEN_SECRET']
+  TWITTER_CONSUMER_KEY = os.environ['TWITTER_CONSUMER_KEY']
+  TWITTER_CONSUMER_SECRET = os.environ['TWITTER_CONSUMER_SECRET']
+  OPENSECRETS_API_KEY = os.environ['OPENSECRETS_API_KEY']
 
 
 # ========= Bot configuration =========
