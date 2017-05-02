@@ -53,18 +53,23 @@ def create_tweet():
   l_firstlast = l_dict[l_index]['@attributes']['firstlast']
   l_party = l_dict[l_index]['@attributes']['party']
 
-  # Get the top contributor for cid (Candidate ID)
+  # Choose a random contributor for cid (Candidate ID)
   contributors = json.dumps(CRP.candContrib.get(cid=l_cid))
   c_dict = json.loads(contributors)
-  contrib_name = c_dict[0]['@attributes']['org_name']
-  contrib_amount = c_dict[0]['@attributes']['total']
+  c_count = len(c_dict)
 
-  # Hash tags
-  hash_tags = "#MoneyinPolitics"
+  #TODO: revisit this
+  if (c_count == 0):
+    log("Failed to get a contributor")
+    quit()
+
+  c_index = random.randint(0, c_count - 1)
+  contrib_name = c_dict[c_index]['@attributes']['org_name']
+  contrib_amount = c_dict[c_index]['@attributes']['total']
 
   # Form tweet text
-  text = 'Representative %s (%s-%s) received $%s from %s. src: OpenSecrets.org %s' % \
-          (l_firstlast, l_party, state, contrib_amount, contrib_name, hash_tags)
+  text = 'Representative %s (%s-%s) accepted $%s from %s. src: OpenSecrets.org' % \
+          (l_firstlast, l_party, state, contrib_amount, contrib_name)
   return text
 
 
