@@ -12,6 +12,7 @@ except ImportError:
   TWITTER_CONSUMER_KEY = os.environ['TWITTER_CONSUMER_KEY']
   TWITTER_CONSUMER_SECRET = os.environ['TWITTER_CONSUMER_SECRET']
   OPENSECRETS_API_KEY = os.environ['OPENSECRETS_API_KEY']
+  LOG_LOCAL = False
 
 
 # ========= Bot configuration =========
@@ -81,10 +82,14 @@ def tweet(text):
 
 def log(message):
   """Enter message in log file"""
-  path = os.path.realpath(os.path.join(os.getcwd(), os.path.dirname(__file__)))
-  with open(os.path.join(path, logfile_name), 'a+') as f:
-      t = strftime("%d %b %Y %H:%M:%S", gmtime())
-      f.write("\n" + t + " " + message)
+  if LOG_LOCAL:
+    path = os.path.realpath(os.path.join(os.getcwd(), os.path.dirname(__file__)))
+    with open(os.path.join(path, logfile_name), 'a+') as f:
+        t = strftime("%d %b %Y %H:%M:%S", gmtime())
+        f.write("\n" + t + " " + message)
+  else:
+    # Heroku prints stdout and stderr to its Logplex
+    print bot_name + ": " + message
 
 
 if __name__ == "__main__":
