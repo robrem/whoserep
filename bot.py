@@ -35,41 +35,17 @@ def create_tweet():
   # OpenSecrets auth
   CRP.apikey = OPENSECRETS_API_KEY
 
-  # Select a random US state and get its legislators
+  # Select a random US state, the select one of its candidates at random
   state = random.choice(states)
-  legislators = json.dumps(CRP.getLegislators.get(id=state))
-
-  # Select a random legislator
-  l_dict = json.loads(legislators)
-  l_count = len(l_dict)
-
-  #TODO: revisit this
-  if (l_count == 0):
-    log("Failed to get a legislator")
-    quit()
-
-  l_index = random.randint(0, l_count - 1)
-  l_cid = l_dict[l_index]['@attributes']['cid']
-  l_firstlast = l_dict[l_index]['@attributes']['firstlast']
-  l_party = l_dict[l_index]['@attributes']['party']
+  cand_dict = getRandomCandByState(state, CRP)
 
   # Choose a random contributor for cid (Candidate ID)
-  contributors = json.dumps(CRP.candContrib.get(cid=l_cid))
-  c_dict = json.loads(contributors)
-  c_count = len(c_dict)
-
-  #TODO: revisit this
-  if (c_count == 0):
-    log("Failed to get a contributor")
-    quit()
-
-  c_index = random.randint(0, c_count - 1)
-  contrib_name = c_dict[c_index]['@attributes']['org_name']
-  contrib_amount = c_dict[c_index]['@attributes']['total']
+  contrib_dict = getRandomContribByCand(cand_dict['cid'], CRP)
 
   # Form tweet text
   text = 'Representative %s (%s-%s) accepted $%s from %s. src: OpenSecrets.org' % \
-          (l_firstlast, l_party, state, contrib_amount, contrib_name)
+          (cand_dict['firstlast'], cand_dict['party'], state, \
+          contrib_dict['amount'], contrib_dict['name'])
   return text
 
 
@@ -88,6 +64,51 @@ def tweet(text):
     log("Tweeted: " + text)
 
 
+def getRandomCandByState(state, crp_obj):
+  """Choose a random candidate from the given state"""
+  cand_dict = {}
+  legislators = json.dumps(crp_obj.getLegislators.get(id=state))
+
+  # Select a random legislator
+  l_dict = json.loads(legislators)
+  l_count = len(l_dict)
+
+  #TODO: revisit this
+  if (l_count == 0):
+    log("Failed to get a legislator")
+    quit()
+
+  l_index = random.randint(0, l_count - 1)
+  cand_dict = {
+    'cid'       : l_dict[l_index]['@attributes']['cid'],
+    'firstlast' : l_dict[l_index]['@attributes']['firstlast'],
+    'party'     : l_dict[l_index]['@attributes']['party']
+  }
+
+  return cand_dict
+
+
+def getRandomContribByCand(cid, crp_obj):
+  """Choose a random contributor to the candidate given by cid"""
+  contrib_dict = {}
+  contributors = json.dumps(crp_obj.candContrib.get(cid=cid))
+  c_dict = json.loads(contributors)
+  c_count = len(c_dict)
+
+  #TODO: revisit this
+  if (c_count == 0):
+    log("Failed to get a contributor")
+    quit()
+
+  c_index = random.randint(0, c_count - 1)
+  contrib_dict = {
+    'name'   : c_dict[c_index]['@attributes']['org_name'],
+    'amount' : c_dict[c_index]['@attributes']['total']
+  }
+
+  return contrib_dict
+
+
 def log(message):
   """Enter message in log file"""
   if LOG_LOCAL:
@@ -102,4 +123,5 @@ def log(message):
 
 if __name__ == "__main__":
   tweet_text = create_tweet()
-  tweet(tweet_text)
+  print tweet_text
+  # tweet(tweet_text)
