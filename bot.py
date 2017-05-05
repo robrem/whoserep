@@ -1,4 +1,3 @@
-import os
 import tweepy
 from time import gmtime, strftime
 from tweettext import TweetText

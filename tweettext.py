@@ -1,3 +1,4 @@
+import os
 import json
 import random
 from wr_crpapi import CRP, CRPApiError
@@ -23,10 +24,10 @@ class TweetText(object):
         OpenSecrets.org and ProPublica.org data.
     """
 
-    CRP.apikey = secrets['OPENSECRETS_API_KEY']
-    congress_api = Congress(secrets['PROPUBLICA_API_KEY'])
 
     def __init__(self):
+        CRP.apikey = secrets['OPENSECRETS_API_KEY']
+        self.congress = Congress(secrets['PROPUBLICA_API_KEY'])
         self.candidate = self._get_candidate()
 
 
@@ -46,8 +47,9 @@ class TweetText(object):
                 contrib['name']
                 )
 
-        # TODO: get support text
-        #       check and adjust text len
+        spprt_text = self._get_support_text()
+
+        text = text + " " + spprt_text
 
         return text
 
@@ -69,7 +71,9 @@ class TweetText(object):
         cand_dict = {
             'cid'       : cand['@attributes']['cid'],
             'firstlast' : cand['@attributes']['firstlast'],
+            'lastname'  : cand['@attributes']['lastname'],
             'gender'    : cand['@attributes']['gender'],
+            'pronoun'   : self._get_gender_pronoun(cand['@attributes']['gender']),
             'party'     : cand['@attributes']['party'],
             'state'     : state,
             'bio_id'    : cand['@attributes']['bioguide_id']
@@ -96,12 +100,50 @@ class TweetText(object):
         return contrib_dict
 
 
+    def _get_support_text(self):
+        """
+            Returns randomly selected support text containing additional
+            information about the candidate, such as committee membership or 
+            voting percentage.
+        """
+        funcs = [self._get_committee_text, self._get_vote_pct_text]
+
+        return random.choice(funcs)()
+
+
+    def _get_committee_text(self):
+        """
+            Returns text containing a candidate's commitee, formatted to tweet.
+
+            Ex: "She serves in the Committee on Agriculture"
+        """
+        text_format = '%s serves in the %s.'
+        committee = self._get_committee()
+
+        return text_format % (self.candidate['pronoun'], committee)
+
+
+    def _get_vote_pct_text(self):
+        """
+            Returns text containing a candidate's tendency to vote with 
+            her/his party as a percentage, formatted to tweet.
+
+            Ex: "She votes with own party 97% of the time."
+        """
+        text_format = '%s votes with own party %s%% of the time.'
+        pct = self._get_votes_with_party_pct()
+
+        return text_format % (self.candidate['pronoun'], pct)
+
+
     def _get_committee(self):
         """
             Returns the name of a random committee on which the candidate serves
         """
-        candidate = congress_api.members.get(self.candidate['bio_id'])
-        committee = random.select(candidate['roles'][0]['committees'])
+        cand = json.dumps(self.congress.members.get(self.candidate['bio_id']))
+        c_dict = json.loads(cand)
+        committee = random.choice(c_dict['roles'][0]['committees'])
+
         return committee['name']
 
 
@@ -109,8 +151,10 @@ class TweetText(object):
         """
             Returns the percentage which the candidate votes with their party.
         """
-        candidate = congress_api.members.get(self.candidate['bio_id'])
-        return candidate['roles'][0]['votes_with_party_pct']  
+        cand = json.dumps(self.congress.members.get(self.candidate['bio_id']))
+        c_dict = json.loads(cand)
+
+        return c_dict['roles'][0]['votes_with_party_pct']  
 
 
     def _get_us_state(self):
@@ -126,3 +170,16 @@ class TweetText(object):
         ]
 
         return random.choice(states)
+
+
+    def _get_gender_pronoun(self, gender_id):
+        """
+            Return a gender pronoun based on candidate's stated gender,
+            or the candidate's last name if gender not listed.
+        """
+        if (gender_id=='F'):
+            return "She"
+        elif (gender_id=='M'):
+            return "He"
+        else:
+            return self.candidate['lastname']
