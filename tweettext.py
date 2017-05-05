@@ -7,13 +7,12 @@ try:
     from config import secrets
 except ImportError:
     secrets = {
-        "TWITTER_ACCESS_TOKEN"        : os.environ['TWITTER_ACCESS_TOKEN'],
-        "TWITTER_ACCESS_TOKEN_SECRET" : os.environ['TWITTER_ACCESS_TOKEN_SECRET'],
-        "TWITTER_CONSUMER_KEY"        : os.environ['TWITTER_CONSUMER_KEY'],
-        "TWITTER_CONSUMER_SECRET"     : os.environ['TWITTER_CONSUMER_SECRET'],
-        "OPENSECRETS_API_KEY"         : os.environ['OPENSECRETS_API_KEY'],
-        "PROPUBLICA_API_KEY"          : os.environ['PROPUBLICA_API_KEY']
+        "OPENSECRETS_API_KEY" : os.environ['OPENSECRETS_API_KEY'],
+        "PROPUBLICA_API_KEY"  : os.environ['PROPUBLICA_API_KEY']
     }
+
+# The max char length for a tweet
+MAX_TWEET_LEN = 140
 
 
 class TweetText(object):
@@ -26,8 +25,11 @@ class TweetText(object):
 
 
     def __init__(self):
+        # APIs
         CRP.apikey = secrets['OPENSECRETS_API_KEY']
         self.congress = Congress(secrets['PROPUBLICA_API_KEY'])
+
+        # The government member we'll tweet about
         self.candidate = self._get_candidate()
 
 
@@ -39,19 +41,26 @@ class TweetText(object):
 
         contrib = self._get_contribution()
 
-        text = text_format % \
-               (self.candidate['firstlast'],
-                self.candidate['party'],
-                self.candidate['state'],
-                contrib['amount'],
-                contrib['name']
-                )
+        main_text = text_format % \
+                   (self.candidate['firstlast'],
+                    self.candidate['party'],
+                    self.candidate['state'],
+                    contrib['amount'],
+                    contrib['name']
+                    )
 
-        spprt_text = self._get_support_text()
+        final_text = main_text + " " + self._get_support_text()
 
-        text = text + " " + spprt_text
+        # Let's try different support text if the tweet is too long
+        tries = 3
+        while (len(final_text) > MAX_TWEET_LEN and tries > 0):
+            final_text = main_text + " " + self._get_support_text()
+            tries -= tries
 
-        return text
+        if (tries==0):
+            return main_text
+
+        return final_text
 
 
     def _get_candidate(self):
@@ -107,7 +116,6 @@ class TweetText(object):
             voting percentage.
         """
         funcs = [self._get_committee_text, self._get_vote_pct_text]
-
         return random.choice(funcs)()
 
 
@@ -120,6 +128,9 @@ class TweetText(object):
         text_format = '%s serves in the %s.'
         committee = self._get_committee()
 
+        if not committee:
+            return ''
+        
         return text_format % (self.candidate['pronoun'], committee)
 
 
@@ -133,6 +144,9 @@ class TweetText(object):
         text_format = '%s votes with own party %s%% of the time.'
         pct = self._get_votes_with_party_pct()
 
+        if not pct:
+            return ''
+
         return text_format % (self.candidate['pronoun'], pct)
 
 
@@ -142,7 +156,12 @@ class TweetText(object):
         """
         cand = json.dumps(self.congress.members.get(self.candidate['bio_id']))
         c_dict = json.loads(cand)
-        committee = random.choice(c_dict['roles'][0]['committees'])
+        committees = c_dict['roles'][0]['committees']
+
+        if not committees:
+            return ''
+
+        committee = random.choice(committees)
 
         return committee['name']
 
@@ -153,8 +172,12 @@ class TweetText(object):
         """
         cand = json.dumps(self.congress.members.get(self.candidate['bio_id']))
         c_dict = json.loads(cand)
+        pct = c_dict['roles'][0]['votes_with_party_pct']
 
-        return c_dict['roles'][0]['votes_with_party_pct']  
+        if not pct:
+            return ''
+
+        return pct  
 
 
     def _get_us_state(self):
