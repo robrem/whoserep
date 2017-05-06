@@ -131,7 +131,7 @@ class TweetText(object):
         if not committee:
             return ''
         
-        return text_format % (self.candidate['pronoun'], committee)
+        return text_format % (self.candidate['pronoun'][0], committee)
 
 
     def _get_vote_pct_text(self):
@@ -139,15 +139,25 @@ class TweetText(object):
             Returns text containing a candidate's tendency to vote with 
             her/his party as a percentage, formatted to tweet.
 
-            Ex: "She votes with own party 97% of the time."
+            Ex: "She votes with her party 97% of the time."
         """
-        text_format = '%s votes with own party %s%% of the time.'
         pct = self._get_votes_with_party_pct()
 
         if not pct:
             return ''
 
-        return text_format % (self.candidate['pronoun'], pct)
+        # We have both pronouns, indicating gender was specified.
+        if len(self.candidate['pronoun']) == 2:
+            return '%s votes with %s party %s%% of the time.' % \
+                   (self.candidate['pronoun'][0], \
+                    self.candidate['pronoun'][1], \
+                    pct)
+
+        # There is only one pronoun, indicating that gender
+        # was not specified. Use last name instead.
+        return '%s votes along party lines %s%% of the time.' % \
+                (self.candidate['pronoun'][0], \
+                 pct)
 
 
     def _get_committee(self):
@@ -197,12 +207,15 @@ class TweetText(object):
 
     def _get_gender_pronoun(self, gender_id):
         """
-            Return a gender pronoun based on candidate's stated gender,
-            or the candidate's last name if gender not listed.
+            Returns third person pronouns based on candidate's stated gender as 
+            a tuple (prounoun, possessive_prounoun). If gender not listed, the
+            candidate's last name is returned.
+
+            Exs: ("She", "her"), ("Smith")
         """
         if (gender_id=='F'):
-            return "She"
+            return ("She", "her")
         elif (gender_id=='M'):
-            return "He"
+            return ("He", "his")
         else:
-            return self.candidate['lastname']
+            return (self.candidate['lastname'],)
