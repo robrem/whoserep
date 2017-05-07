@@ -80,7 +80,7 @@ class TweetText(object):
         cand_dict = {
             'cid'       : cand['@attributes']['cid'],
             'firstlast' : cand['@attributes']['firstlast'],
-            'lastname'  : cand['@attributes']['lastname'],
+            'lastname'  : cand['@attributes']['lastname'].lower().title(),
             'gender'    : cand['@attributes']['gender'],
             'pronoun'   : self._get_gender_pronoun(cand['@attributes']['gender']),
             'party'     : cand['@attributes']['party'],
