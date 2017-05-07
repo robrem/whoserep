@@ -100,10 +100,11 @@ class TweetText(object):
         contributors = json.dumps(CRP.candContrib.get(cid=self.candidate['cid']))
         contribs_dict = json.loads(contributors)
         contrib = random.choice(contribs_dict)
+        amount = int(contrib['@attributes']['total'])
 
         contrib_dict = {
             'name'   : contrib['@attributes']['org_name'],
-            'amount' : contrib['@attributes']['total']
+            'amount' : format(amount, ",d")
         }
 
         return contrib_dict
@@ -208,7 +209,7 @@ class TweetText(object):
     def _get_gender_pronoun(self, gender_id):
         """
             Returns third person pronouns based on candidate's stated gender as 
-            a tuple (prounoun, possessive_prounoun). If gender not listed, the
+            a tuple (pronoun, possessive_pronoun). If gender not listed, the
             candidate's last name is returned.
 
             Exs: ("She", "her"), ("Smith")
