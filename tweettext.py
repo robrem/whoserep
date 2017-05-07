@@ -147,17 +147,16 @@ class TweetText(object):
         if not pct:
             return ''
 
-        # We have both pronouns, indicating gender was specified.
-        if len(self.candidate['pronoun']) == 2:
+        if self.candidate['pronoun']:
             return '%s votes with %s party %s%% of the time.' % \
                    (self.candidate['pronoun'][0], \
                     self.candidate['pronoun'][1], \
                     pct)
 
-        # There is only one pronoun, indicating that gender
+        # There are no pronouns, indicating that gender
         # was not specified. Use last name instead.
         return '%s votes along party lines %s%% of the time.' % \
-                (self.candidate['pronoun'][0], \
+                (self.candidate['lastname'], \
                  pct)
 
 
@@ -209,14 +208,14 @@ class TweetText(object):
     def _get_gender_pronoun(self, gender_id):
         """
             Returns third person pronouns based on candidate's stated gender as 
-            a tuple (pronoun, possessive_pronoun). If gender not listed, the
-            candidate's last name is returned.
+            a tuple (pronoun, possessive_pronoun). If gender not listed, 
+            'None' is returned.
 
-            Exs: ("She", "her"), ("Smith")
+            Exs: ("She", "her")
         """
         if (gender_id=='F'):
             return ("She", "her")
         elif (gender_id=='M'):
             return ("He", "his")
         else:
-            return (self.candidate['lastname'],)
+            return None
