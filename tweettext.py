@@ -14,6 +14,10 @@ except ImportError:
 # The max char length for a tweet
 MAX_TWEET_LEN = 140
 
+# The most recent year that personal finance disclosure agreements
+# (PFD) were submitted by congress.
+PFD_YEAR = 2014
+
 
 class TweetText(object):
     """
@@ -116,7 +120,7 @@ class TweetText(object):
             information about the candidate, such as committee membership or 
             voting percentage.
         """
-        funcs = [self._get_committee_text, self._get_vote_pct_text]
+        funcs = [self._get_committee_text, self._get_vote_pct_text, self._get_net_worth_text]
         return random.choice(funcs)()
 
 
@@ -150,14 +154,44 @@ class TweetText(object):
         if self.candidate['pronoun']:
             return '%s votes with %s party %s%% of the time.' % \
                    (self.candidate['pronoun'][0], \
-                    self.candidate['pronoun'][1], \
-                    pct)
+                    self.candidate['pronoun'][1].lower(), \
+                    pct
+                   )
 
         # There are no pronouns, indicating that gender
         # was not specified. Use last name instead.
         return '%s votes along party lines %s%% of the time.' % \
                 (self.candidate['lastname'], \
-                 pct)
+                 pct
+                )
+
+
+    def _get_net_worth_text(self):
+        """
+            Returns text containing the candidate's estimated net worth,
+            formatted to tweet.
+
+            Ex: "Her estimated net worth in 2014 was $101,273,023."
+        """
+        net_worth = self._get_net_worth()
+
+        if not net_worth:
+            return ''
+
+        if self.candidate['pronoun']:
+            return "%s estimated net worth in %s was $%s." % \
+                    (self.candidate['pronoun'][1], \
+                     PFD_YEAR, \
+                     net_worth
+                    )
+
+        # There are no pronouns, indicating that gender
+        # was not specified. Use last name instead.
+        return "%s's estimated net worth in %s was $%s." % \
+                (self.candidate['lastname'], \
+                 PFD_YEAR, \
+                 net_worth
+                )
 
 
     def _get_committee(self):
@@ -187,7 +221,26 @@ class TweetText(object):
         if not pct:
             return ''
 
-        return pct  
+        return pct
+
+
+    def _get_net_worth(self):
+        """
+            Returns a candidate's estimated net worth based on the most
+            recent personal finance disclosure (PFD).
+        """
+        pfd = json.dumps(CRP.memPFDprofile.get(cid=self.candidate['cid'], year=PFD_YEAR))
+        pfd_dict = json.loads(pfd)
+
+        net_high = int(pfd_dict['@attributes']['net_high'])
+        net_low = int(pfd_dict['@attributes']['net_low'])
+
+        if not net_high or not net_low:
+            return ''
+
+        net_worth = (net_high + net_low) / 2
+
+        return format(net_worth, ",d")
 
 
     def _get_us_state(self):
@@ -214,8 +267,8 @@ class TweetText(object):
             Exs: ("She", "her")
         """
         if (gender_id=='F'):
-            return ("She", "her")
+            return ("She", "Her")
         elif (gender_id=='M'):
-            return ("He", "his")
+            return ("He", "His")
         else:
             return None

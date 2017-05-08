@@ -84,6 +84,12 @@ class CRP(object):
             results = CRP._apicall('getLegislators', kwargs)['legislator']
             return results
 
+    class memPFDprofile(object):
+        @staticmethod
+        def get(**kwargs):
+            results = CRP._apicall('memPFDprofile', kwargs)['member_profile']
+            return results
+
     class memTravelTrips(object):
         @staticmethod
         def get(**kwargs):
