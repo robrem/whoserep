@@ -136,7 +136,10 @@ class TweetText(object):
         if not committee:
             return ''
         
-        return text_format % (self.candidate['pronoun'][0], committee)
+        if self.candidate['pronoun']:
+            return text_format % (self.candidate['pronoun'][0], committee)
+
+        return text_format % (self.candidate['lastname'], committee)
 
 
     def _get_vote_pct_text(self):
