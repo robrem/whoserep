@@ -53,12 +53,17 @@ class TweetText(object):
                     contrib['name']
                     )
 
-        final_text = main_text + " " + self._get_support_text()
+        spprt_text = self._get_support_text()
+        final_text = main_text + " " + spprt_text
 
         # Let's try different support text if the tweet is too long
+        # or the support text is empty
         tries = 3
-        while (len(final_text) > MAX_TWEET_LEN and tries > 0):
-            final_text = main_text + " " + self._get_support_text()
+        while ((len(final_text) > MAX_TWEET_LEN \
+                or not spprt_text) \
+                and tries > 0):
+            spprt_text = self._get_support_text()
+            final_text = main_text + " " + spprt_text
             tries -= tries
 
         if (tries==0):
