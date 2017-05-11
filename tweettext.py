@@ -2,7 +2,7 @@ import os
 import json
 import random
 from wr_crpapi import CRP, CRPApiError
-from congress import Congress
+from congress import Congress, CongressError
 try:
     from config import secrets
 except ImportError:
@@ -17,6 +17,12 @@ MAX_TWEET_LEN = 140
 # The most recent year that personal finance disclosure agreements
 # (PFD) were submitted by congress.
 PFD_YEAR = 2014
+
+
+class TweetTextError(Exception):
+    """
+        Exception for general TweetText errors.
+    """
 
 
 class TweetText(object):
@@ -35,6 +41,9 @@ class TweetText(object):
 
         # The government member we'll tweet about
         self.candidate = self._get_candidate()
+
+        if not self.candidate:
+            raise TweetTextError('Failed to get a candidate')
 
 
     def get(self):
@@ -79,10 +88,13 @@ class TweetText(object):
             Returns a dict containing candidate information.
         """
         state = self._get_us_state()
-        candidates = json.dumps(CRP.getLegislators.get(id=state))
+
+        try:
+            candidates = json.dumps(CRP.getLegislators.get(id=state))
+        except CRPApiError:
+            return None
 
         # Select a random candidate
-        # TODO: error checking
         cands_dict = json.loads(candidates)
         cand = random.choice(cands_dict)
 
@@ -106,7 +118,11 @@ class TweetText(object):
 
             Returns a dict containing contributor information.
         """
-        contributors = json.dumps(CRP.candContrib.get(cid=self.candidate['cid']))
+        try:
+            contributors = json.dumps(CRP.candContrib.get(cid=self.candidate['cid']))
+        except CRPApiError:
+            raise TweetTextError('Failed to get contributions')
+
         contribs_dict = json.loads(contributors)
         contrib = random.choice(contribs_dict)
         amount = int(contrib['@attributes']['total'])
@@ -206,11 +222,17 @@ class TweetText(object):
         """
             Returns the name of a random committee on which the candidate serves
         """
-        cand = json.dumps(self.congress.members.get(self.candidate['bio_id']))
-        c_dict = json.loads(cand)
-        committees = c_dict['roles'][0]['committees']
+        try:
+            cand = json.dumps(self.congress.members.get(self.candidate['bio_id']))
+        except CongressError:
+            return ''
 
-        if not committees:
+        c_dict = json.loads(cand)
+
+        try:
+            if 'committees' in c_dict['roles'][0]:
+                committees = c_dict['roles'][0]['committees']
+        except KeyError:
             return ''
 
         committee = random.choice(committees)
@@ -222,11 +244,17 @@ class TweetText(object):
         """
             Returns the percentage which the candidate votes with their party.
         """
-        cand = json.dumps(self.congress.members.get(self.candidate['bio_id']))
-        c_dict = json.loads(cand)
-        pct = c_dict['roles'][0]['votes_with_party_pct']
+        try:
+            cand = json.dumps(self.congress.members.get(self.candidate['bio_id']))
+        except CongressError:
+            return ''
 
-        if not pct:
+        c_dict = json.loads(cand)
+
+        try:
+            if 'votes_with_party_pct' in c_dict['roles'][0]:
+                pct = c_dict['roles'][0]['votes_with_party_pct']
+        except KeyError:
             return ''
 
         return pct
@@ -237,13 +265,20 @@ class TweetText(object):
             Returns a candidate's estimated net worth based on the most
             recent personal finance disclosure (PFD).
         """
-        pfd = json.dumps(CRP.memPFDprofile.get(cid=self.candidate['cid'], year=PFD_YEAR))
+        try:
+            pfd = json.dumps(CRP.memPFDprofile.get(cid=self.candidate['cid'], year=PFD_YEAR))
+        except CRPApiError:
+            return ''
+
         pfd_dict = json.loads(pfd)
 
-        net_high = int(pfd_dict['@attributes']['net_high'])
-        net_low = int(pfd_dict['@attributes']['net_low'])
+        try:
+            if 'net_high' in pfd_dict['@attributes'] and \
+               'net_low' in pfd_dict['@attributes']:
 
-        if not net_high or not net_low:
+                net_high = int(pfd_dict['@attributes']['net_high'])
+                net_low = int(pfd_dict['@attributes']['net_low'])
+        except KeyError:
             return ''
 
         net_worth = (net_high + net_low) / 2
