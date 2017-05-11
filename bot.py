@@ -1,7 +1,7 @@
 import os
 import tweepy
 from time import gmtime, strftime
-from tweettext import TweetText
+from tweettext import TweetText, TweetTextError
 try: 
     from config import *
 except ImportError:
