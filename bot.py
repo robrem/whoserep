@@ -24,7 +24,8 @@ def create_tweet():
     """Create the tweet text"""
     try:
         TT = TweetText()
-    except TweetTextError:
+    except TweetTextError as e:
+        log(e.message)
         return None
 
     return TT.get()
