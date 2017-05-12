@@ -24,12 +24,11 @@ def create_tweet():
     """Create the tweet text"""
     try:
         TT = TweetText()
+        return TT.get()
     except TweetTextError as e:
         log(e.message)
         return None
-
-    return TT.get()
-
+        
 
 def tweet(text):
     """Tweet the text from the bot account"""
