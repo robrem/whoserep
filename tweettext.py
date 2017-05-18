@@ -249,15 +249,20 @@ class TweetText(object):
         except CongressError:
             return None
 
-        c_dict = json.loads(cand)
-
+        c = json.loads(cand)
         
-        if 'committees' in c_dict['roles'][0]:
-            committees = c_dict['roles'][0]['committees']
+        if 'committees' in c['roles'][0]:
+            committees = c['roles'][0]['committees']
+            comm_len = len(committees)
+            
+            if comm_len > 1:
+                committee = random.choice(committees)
+            elif comm_len == 1:
+                committee = committees
+            else:
+                return None
         else:
             return None
-
-        committee = random.choice(committees)
 
         return committee['name']
 
