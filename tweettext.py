@@ -34,13 +34,13 @@ class TweetText(object):
     """
 
 
-    def __init__(self):
+    def __init__(self, cid=None):
         # APIs
         CRP.apikey = secrets['OPENSECRETS_API_KEY']
         self.congress = Congress(secrets['PROPUBLICA_API_KEY'])
 
         # The government member we'll tweet about
-        self.candidate = self._get_candidate()
+        self.candidate = self._get_candidate(cid)
 
 
     def get(self):
@@ -84,24 +84,30 @@ class TweetText(object):
         return final_text
 
 
-    def _get_candidate(self):
+    def _get_candidate(self, cid):
         """
-            Choose a random candidate from a random US state.
+            Chooses a random candidate from a random US state. If a 
+            specific cid is given, choose that candidate instead.
 
-            Returns a dict containing candidate information.
+            Returns a dict containing the candidate's information.
         """
-        state = self._get_us_state()
 
         try:
-            candidates = json.dumps(CRP.getLegislators.get(id=state))
+            if cid:
+                c = json.dumps(CRP.getLegislators.get(id=cid))
+            else:
+                state = self._get_us_state()
+                c = json.dumps(CRP.getLegislators.get(id=state))
         except CRPApiError:
             return None
 
-        # Select a random candidate
-        cands_dict = json.loads(candidates)
-
-        if cands_dict:
-            cand = random.choice(cands_dict)
+        cands = json.loads(c)
+        cands_len = len(cands)
+        
+        if cands_len > 1:
+            cand = random.choice(cands)
+        elif cands_len == 1:
+            cand = cands
         else:
             return None
 
@@ -112,7 +118,7 @@ class TweetText(object):
             'gender'    : cand['@attributes']['gender'],
             'pronoun'   : self._get_gender_pronoun(cand['@attributes']['gender']),
             'party'     : cand['@attributes']['party'],
-            'state'     : state,
+            'state'     : cand['@attributes']['office'][:2],
             'bio_id'    : cand['@attributes']['bioguide_id']
         }
 
@@ -126,14 +132,17 @@ class TweetText(object):
             Returns a dict containing contributor information.
         """
         try:
-            contributors = json.dumps(CRP.candContrib.get(cid=self.candidate['cid']))
+            c = json.dumps(CRP.candContrib.get(cid=self.candidate['cid']))
         except CRPApiError:
             return None
 
-        contribs_dict = json.loads(contributors)
+        contribs = json.loads(c)
+        contribs_len = len(contribs)
 
-        if contribs_dict:
-            contrib = random.choice(contribs_dict)
+        if contribs_len > 1:
+            contrib = random.choice(contribs)
+        elif contribs_len == 1:
+            contrib = contribs
         else:
             return None
 

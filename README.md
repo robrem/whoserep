@@ -14,7 +14,7 @@ pip install tweepy
 pip install python-congress
 ```
 
-### Configure
+### Configure it
 You will need to create a [Twitter account](https://support.twitter.com/articles/100990 "Twitter account sign up") and [app](https://apps.twitter.com/ "Twitter apps page") for your bot.
 
 You'll also need a [Center for Responsive Politics API key](https://www.opensecrets.org/api/admin/index.php?function=signup "OpenSecrets API key request") and a [ProPublica API key](https://www.propublica.org/datastore/api/propublica-congress-api "ProPublica API key request").
