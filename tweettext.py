@@ -1,6 +1,7 @@
 import os
 import json
 import random
+import HTMLParser
 from wr_crpapi import CRP, CRPApiError
 from congress import Congress, CongressError
 try:
@@ -264,7 +265,9 @@ class TweetText(object):
         else:
             return None
 
-        return committee['name']
+        h = HTMLParser.HTMLParser()
+
+        return h.unescape(committee['name'])
 
 
     def _get_votes_with_party_pct(self):
