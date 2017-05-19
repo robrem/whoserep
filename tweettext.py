@@ -254,20 +254,15 @@ class TweetText(object):
         
         if 'committees' in c['roles'][0]:
             committees = c['roles'][0]['committees']
-            comm_len = len(committees)
-            
-            if comm_len > 1:
-                committee = random.choice(committees)
-            elif comm_len == 1:
-                committee = committees
-            else:
-                return None
+            committee = random.choice(committees)
+            h = HTMLParser.HTMLParser()
+
+            return h.unescape(committee['name'])
+
         else:
             return None
 
-        h = HTMLParser.HTMLParser()
-
-        return h.unescape(committee['name'])
+        
 
 
     def _get_votes_with_party_pct(self):
