@@ -36,5 +36,5 @@ python bot.py
 ```
 
 ## Make your own
-There's a lot of interesting, publicly available data about US government representatives. How about extending this bot to tweet about voting records when a legislator is [mentioned in the news](https://developer.nytimes.com/ "New York Times Developer Network")?
+There's a lot of interesting, publicly available data about US government representatives. How about extending this bot to tweet about [voting records](https://projects.propublica.org/api-docs/congress-api/endpoints/#get-a-specific-members-vote-positions "ProPublica vote positions endpoint") when a legislator is [mentioned in the news](https://developer.nytimes.com/ "New York Times Developer Network")?
 

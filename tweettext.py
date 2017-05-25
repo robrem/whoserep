@@ -262,8 +262,6 @@ class TweetText(object):
         else:
             return None
 
-        
-
 
     def _get_votes_with_party_pct(self):
         """
