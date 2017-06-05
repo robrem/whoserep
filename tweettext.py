@@ -252,7 +252,7 @@ class TweetText(object):
 
         c = json.loads(cand)
         
-        if 'committees' in c['roles'][0]:
+        if 'committees' in c['roles'][0] and len(c['roles'][0]['committees']) > 0:
             committees = c['roles'][0]['committees']
             committee = random.choice(committees)
             h = HTMLParser.HTMLParser()
