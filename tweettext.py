@@ -43,6 +43,9 @@ class TweetText(object):
         # The government member we'll tweet about
         self.candidate = self._get_candidate(cid)
 
+        # Support text functions
+        self.spprt_funcs = [self._get_committee_text, self._get_vote_pct_text, self._get_net_worth_text]
+
 
     def get(self):
         """
@@ -163,8 +166,7 @@ class TweetText(object):
             information about the candidate, such as committee membership or 
             voting percentage.
         """
-        funcs = [self._get_committee_text, self._get_vote_pct_text, self._get_net_worth_text]
-        return random.choice(funcs)()
+        return random.choice(self.spprt_funcs)()
 
 
     def _get_committee_text(self):
@@ -253,6 +255,10 @@ class TweetText(object):
         c = json.loads(cand)
         
         if 'committees' in c['roles'][0] and len(c['roles'][0]['committees']) > 0:
+
+            if len(c['roles'][0]['committees']) == 1:
+                self.spprt_funcs.remove(self._get_committee_text)
+
             committees = c['roles'][0]['committees']
             committee = random.choice(committees)
             h = HTMLParser.HTMLParser()
@@ -260,6 +266,7 @@ class TweetText(object):
             return h.unescape(committee['name'])
 
         else:
+            self.spprt_funcs.remove(self._get_committee_text)
             return None
 
 
@@ -267,6 +274,8 @@ class TweetText(object):
         """
             Returns the percentage which the candidate votes with their party.
         """
+        self.spprt_funcs.remove(self._get_vote_pct_text)
+
         try:
             cand = json.dumps(self.congress.members.get(self.candidate['bio_id']))
         except CongressError:
@@ -274,13 +283,10 @@ class TweetText(object):
 
         c_dict = json.loads(cand)
 
-        
         if 'votes_with_party_pct' in c_dict['roles'][0]:
-            pct = c_dict['roles'][0]['votes_with_party_pct']
+            return c_dict['roles'][0]['votes_with_party_pct']
         else:
             return None
-
-        return pct
 
 
     def _get_net_worth(self):
@@ -288,6 +294,8 @@ class TweetText(object):
             Returns a candidate's estimated net worth based on the most
             recent personal finance disclosure (PFD).
         """
+        self.spprt_funcs.remove(self._get_net_worth_text)
+
         try:
             pfd = json.dumps(CRP.memPFDprofile.get(cid=self.candidate['cid'], year=PFD_YEAR))
         except CRPApiError:
@@ -300,12 +308,10 @@ class TweetText(object):
 
             net_high = int(pfd_dict['@attributes']['net_high'])
             net_low = int(pfd_dict['@attributes']['net_low'])
+            net_worth = (net_high + net_low) / 2
+            return format(net_worth, ",d")
         else:
             return None
-
-        net_worth = (net_high + net_low) / 2
-
-        return format(net_worth, ",d")
 
 
     def _get_us_state(self):
