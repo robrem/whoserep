@@ -2,7 +2,7 @@ import os
 import json
 import random
 import HTMLParser
-from wr_crpapi import CRP, CRPError
+from crpapi import CRP, CRPError
 from congress import Congress, CongressError
 try:
     from config import secrets

@@ -11,6 +11,7 @@ For each tweet, a legislator and one of their top campaign contributors are chos
 ### Dependencies
 ```python
 pip install tweepy
+pip install opensecrets-crpapi
 pip install python-congress
 ```
 

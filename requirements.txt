@@ -1,2 +1,3 @@
 tweepy==3.5.0
+opensecrets-crpapi
 python-congress==0.1.0
