@@ -1,5 +1,5 @@
 """
-A Python client for interacting with the Center for Responsive Politic's 
+A Python client for interacting with the Center for Responsive Politics' 
 campaign finance data.
 
 API docs: https://www.opensecrets.org/resources/create/api_doc.php
@@ -13,6 +13,11 @@ import urllib, urllib2
 
 class CRPError(Exception):
     """ Exception for general CRP Client errors. """
+    def __init__(self, message, response=None, url=None):
+        super(CRPError, self).__init__(message)
+        self.message = message
+        self.response = response
+        self.url = url
 
 
 class Client(object):
@@ -25,18 +30,18 @@ class Client(object):
         self.apikey = apikey
         self.http = httplib2.Http(cache)
 
-    def fetch(self, func, **kwargs):
+    def fetch(self, method, **kwargs):
         """ Make the API request. """
 
         params = urllib.urlencode(kwargs)
-        url = self.BASE_URI.format(method=func, apikey=self.apikey, params=params)
+        url = self.BASE_URI.format(method=method, apikey=self.apikey, params=params)
         headers = { 'User-Agent' : 'Mozilla/5.0' }
 
         resp, content = self.http.request(url, headers=headers)
         content = json.loads(content)
 
         if not resp.get('status') == '200':
-            raise CRPError(func, resp, url)
+            raise CRPError(method, resp, url)
 
         return content['response']
 
