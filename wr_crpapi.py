@@ -1,97 +1,132 @@
-""" 
-  Python library for interacting with the CRP API based on James Turks'
-  Python CRP API (https://code.google.com/archive/p/python-crpapi/downloads)
+"""
+A Python client for interacting with the Center for Responsive Politic's 
+campaign finance data.
 
-  The CRP API (http://www.opensecrets.org/action/api_doc.php) provides campaign 
-  finance and other data from the Center for Responsive Politics.
-
-  Example usage:
-  >>> print CRP.candSummary.get(cid='N00007360',cycle='2016')
-  {u'origin': u'Center for Responsive Politics', u'next_election': u'2016', u'debt': u'0', 
-  u'last_updated': u'12/31/2016', u'cand_name': u'Pelosi, Nancy', u'cid': u'N00007360', 
-  u'spent': u'3478460.87', u'chamber': u'H', u'state': u'CA', u'first_elected': u'1987', 
-  u'source': u'http://www.opensecrets.org/politicians/summary.php?cid=N00007360&cycle=2016', 
-  u'party': u'D', u'total': u'4318118.79', u'cash_on_hand': u'1820817.85', u'cycle': u'2016'}
+API docs: https://www.opensecrets.org/resources/create/api_doc.php
 """
 
-import urllib, urllib2
+import httplib2
 import json
+import os
+import urllib, urllib2
 
-class CRPApiError(Exception):
-    """ Exception for CRP API errors """
 
-# results #
-class CRPApiObject(object):
-    def __init__(self, d):
-        self.__dict__ = d
+class CRPError(Exception):
+    """ Exception for general CRP Client errors. """
 
-# namespaces #
-class CRP(object):
 
-    apikey = None
+class Client(object):
 
-    @staticmethod
-    def _apicall(func, params):
-        if CRP.apikey is None:
-            raise CRPApiError('Missing CRP apikey')
+    BASE_URI = \
+            'https://www.opensecrets.org/api/?method={method}&output=json&apikey={apikey}&{params}'
 
-        url = 'https://www.opensecrets.org/api/?method=%s&output=json&apikey=%s&%s' % \
-              (func, CRP.apikey, urllib.urlencode(params))
+    def __init__(self, apikey=None, cache='.cache'):
+
+        self.apikey = apikey
+        self.http = httplib2.Http(cache)
+
+    def fetch(self, func, **kwargs):
+        """ Make the API request. """
+
+        params = urllib.urlencode(kwargs)
+        url = self.BASE_URI.format(method=func, apikey=self.apikey, params=params)
         headers = { 'User-Agent' : 'Mozilla/5.0' }
 
-        try:
-            request = urllib2.Request(url, None, headers)
-            response = urllib2.urlopen(request).read()
-            return json.loads(response)['response']
-        except urllib2.HTTPError, e:
-            raise CRPApiError(e.read())
-        except (ValueError, KeyError), e:
-            raise CRPApiError('Invalid Response')
+        resp, content = self.http.request(url, headers=headers)
+        content = json.loads(content)
 
-    class candSummary(object):
-        @staticmethod
-        def get(**kwargs):
-            result = CRP._apicall('candSummary', kwargs)['summary']
-            return result['@attributes']
+        if not resp.get('status') == '200':
+            raise CRPError(func, resp, url)
 
-    class candContrib(object):
-        @staticmethod
-        def get(**kwargs):
-            results = CRP._apicall('candContrib', kwargs)['contributors']['contributor']
-            return results
+        return content['response']
 
-    class candIndustry(object):
-        @staticmethod
-        def get(**kwargs):
-            results = CRP._apicall('candIndustry', kwargs)['industries']['industry']
-            return results
 
-    class candSector(object):
-        @staticmethod
-        def get(**kwargs):
-            results = CRP._apicall('candSector', kwargs)['sectors']['sector']
-            return results
+class CandidatesClient(Client):
 
-    class candIndByInd(object):
-        @staticmethod
-        def get(**kwargs):
-            result = CRP._apicall('CandIndByInd', kwargs)['candIndus']
-            return result['@attributes']
+    def get(self, id_code):
+        """ 
+            id_code may be either a candidate's specific CID, or a two letter 
+            state code, or a 4 character district code.
+        """
+        return self.fetch('getLegislators', id=id_code)['legislator']
 
-    class getLegislators(object):
-        @staticmethod
-        def get(**kwargs):
-            results = CRP._apicall('getLegislators', kwargs)['legislator']
-            return results
+    def pfd(self, cid, year=None):
+        kwargs = {'cid' : cid}
 
-    class memPFDprofile(object):
-        @staticmethod
-        def get(**kwargs):
-            results = CRP._apicall('memPFDprofile', kwargs)['member_profile']
-            return results
+        if year:
+            kwargs['year'] = year
 
-    class memTravelTrips(object):
-        @staticmethod
-        def get(**kwargs):
-            results = CRP._apicall('memTravelTrips', kwargs)['trips']['trip']
-            return results
+        return self.fetch('memPFDprofile', **kwargs)['member_profile']
+
+    def summary(self, cid, cycle=None):
+        kwargs = {'cid' : cid}
+
+        if cycle:
+            kwargs['cycle'] = cycle
+
+        return self.fetch('candSummary', **kwargs)['summary']['@attributes']
+
+    def contrib(self, cid, cycle=None):
+        kwargs = {'cid' : cid}
+
+        if cycle:
+            kwargs['cycle'] = cycle
+
+        return self.fetch('candContrib', **kwargs)['contributors']['contributor']
+
+    def industries(self, cid, cycle=None):
+        kwargs = {'cid' : cid}
+
+        if cycle:
+            kwargs['cycle'] = cycle
+
+        return self.fetch('candIndustry', **kwargs)['industries']['industry']
+
+    def contrib_by_ind(self, cid, industry, cycle=None):
+        kwargs = {'cid' : cid, 'ind' : industry}
+
+        if cycle:
+            kwargs['cycle'] = cycle
+
+        return self.fetch('candIndByInd', **kwargs)['candIndus']['@attributes']
+
+    def sector(self, cid, cycle=None):
+        kwargs = {'cid' : cid}
+
+        if cycle:
+            kwargs['cycle'] = cycle
+
+        return self.fetch('candSector', **kwargs)['sectors']['sector']
+
+
+class CommitteesClient(Client):
+
+    def cmte_by_ind(self, cmte, industry, congress=None):
+        kwargs = {'cmte' : cmte, 'indus' : industry}
+
+        if congress:
+            kwargs['congno'] = congress
+
+        return self.fetch('congCmteIndus', **kwargs)['committee']['@attributes']
+
+
+class OrganizationsClient(Client):
+
+    def get(self, org_name):
+        return self.fetch('getOrgs', org=org_name)['organization']
+
+    def summary(self, org_id):
+        return self.fetch('orgSummary', id=org_id)['organization']['@attributes']
+
+
+class CRP(Client):
+
+    def __init__(self, apikey=None, cache='.cache'):
+
+        if apikey is None:
+            apikey = os.environ.get('OPENSECRETS_API_KEY')
+
+        super(CRP, self).__init__(apikey, cache)
+        self.candidates = CandidatesClient(self.apikey, cache)
+        self.committees = CommitteesClient(self.apikey, cache)
+        self.orgs = OrganizationsClient(self.apikey, cache)

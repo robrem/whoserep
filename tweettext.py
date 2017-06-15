@@ -2,7 +2,7 @@ import os
 import json
 import random
 import HTMLParser
-from wr_crpapi import CRP, CRPApiError
+from wr_crpapi import CRP, CRPError
 from congress import Congress, CongressError
 try:
     from config import secrets
@@ -37,7 +37,7 @@ class TweetText(object):
 
     def __init__(self, cid=None):
         # APIs
-        CRP.apikey = secrets['OPENSECRETS_API_KEY']
+        self.crp = CRP(secrets['OPENSECRETS_API_KEY'])
         self.congress = Congress(secrets['PROPUBLICA_API_KEY'])
 
         # The government member we'll tweet about
@@ -98,11 +98,11 @@ class TweetText(object):
 
         try:
             if cid:
-                c = json.dumps(CRP.getLegislators.get(id=cid))
+                c = json.dumps(self.crp.candidates.get(cid))
             else:
                 state = self._get_us_state()
-                c = json.dumps(CRP.getLegislators.get(id=state))
-        except CRPApiError:
+                c = json.dumps(self.crp.candidates.get(state))
+        except CRPError:
             return None
 
         cands = json.loads(c)
@@ -136,8 +136,8 @@ class TweetText(object):
             Returns a dict containing contributor information.
         """
         try:
-            c = json.dumps(CRP.candContrib.get(cid=self.candidate['cid']))
-        except CRPApiError:
+            c = json.dumps(self.crp.candidates.contrib(self.candidate['cid']))
+        except CRPError:
             return None
 
         contribs = json.loads(c)
@@ -297,8 +297,8 @@ class TweetText(object):
         self.spprt_funcs.remove(self._get_net_worth_text)
 
         try:
-            pfd = json.dumps(CRP.memPFDprofile.get(cid=self.candidate['cid'], year=PFD_YEAR))
-        except CRPApiError:
+            pfd = json.dumps(self.crp.candidates.pfd(self.candidate['cid'], PFD_YEAR))
+        except CRPError:
             return None
 
         pfd_dict = json.loads(pfd)
