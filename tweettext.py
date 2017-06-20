@@ -98,14 +98,13 @@ class TweetText(object):
 
         try:
             if cid:
-                c = json.dumps(self.crp.candidates.get(cid))
+                cands = self.crp.candidates.get(cid)
             else:
                 state = self._get_us_state()
-                c = json.dumps(self.crp.candidates.get(state))
+                cands = self.crp.candidates.get(state)
         except CRPError:
             return None
 
-        cands = json.loads(c)
         cands_len = len(cands)
         
         if cands_len > 1:
@@ -136,11 +135,10 @@ class TweetText(object):
             Returns a dict containing contributor information.
         """
         try:
-            c = json.dumps(self.crp.candidates.contrib(self.candidate['cid']))
+            contribs = self.crp.candidates.contrib(self.candidate['cid'])
         except CRPError:
             return None
 
-        contribs = json.loads(c)
         contribs_len = len(contribs)
 
         if contribs_len > 1:
@@ -248,18 +246,16 @@ class TweetText(object):
             Returns the name of a random committee on which the candidate serves.
         """
         try:
-            cand = json.dumps(self.congress.members.get(self.candidate['bio_id']))
+            cand = self.congress.members.get(self.candidate['bio_id'])
         except CongressError:
             return None
-
-        c = json.loads(cand)
         
-        if 'committees' in c['roles'][0] and len(c['roles'][0]['committees']) > 0:
+        if 'committees' in cand['roles'][0] and len(cand['roles'][0]['committees']) > 0:
 
-            if len(c['roles'][0]['committees']) == 1:
+            if len(cand['roles'][0]['committees']) == 1:
                 self.spprt_funcs.remove(self._get_committee_text)
 
-            committees = c['roles'][0]['committees']
+            committees = cand['roles'][0]['committees']
             committee = random.choice(committees)
             h = HTMLParser.HTMLParser()
 
@@ -277,14 +273,12 @@ class TweetText(object):
         self.spprt_funcs.remove(self._get_vote_pct_text)
 
         try:
-            cand = json.dumps(self.congress.members.get(self.candidate['bio_id']))
+            cand = self.congress.members.get(self.candidate['bio_id'])
         except CongressError:
             return None
 
-        c_dict = json.loads(cand)
-
-        if 'votes_with_party_pct' in c_dict['roles'][0]:
-            return c_dict['roles'][0]['votes_with_party_pct']
+        if 'votes_with_party_pct' in cand['roles'][0]:
+            return cand['roles'][0]['votes_with_party_pct']
         else:
             return None
 
@@ -297,17 +291,15 @@ class TweetText(object):
         self.spprt_funcs.remove(self._get_net_worth_text)
 
         try:
-            pfd = json.dumps(self.crp.candidates.pfd(self.candidate['cid'], PFD_YEAR))
+            pfd = self.crp.candidates.pfd(self.candidate['cid'], PFD_YEAR)
         except CRPError:
             return None
 
-        pfd_dict = json.loads(pfd)
+        if 'net_high' in pfd['@attributes'] and \
+           'net_low' in pfd['@attributes']:
 
-        if 'net_high' in pfd_dict['@attributes'] and \
-           'net_low' in pfd_dict['@attributes']:
-
-            net_high = int(pfd_dict['@attributes']['net_high'])
-            net_low = int(pfd_dict['@attributes']['net_low'])
+            net_high = int(pfd['@attributes']['net_high'])
+            net_low = int(pfd['@attributes']['net_low'])
             net_worth = (net_high + net_low) / 2
             return format(net_worth, ",d")
         else:
