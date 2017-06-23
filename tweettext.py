@@ -97,11 +97,13 @@ class TweetText(object):
         """
 
         try:
-            if cid:
-                cands = self.crp.candidates.get(cid)
-            else:
-                state = self._get_us_state()
-                cands = self.crp.candidates.get(state)
+            if not cid:
+                f = open('data/cids.txt','r')
+                cids_all = json.load(f)
+                f.close()
+                cid = random.choice(cids_all)
+
+            cands = self.crp.candidates.get(cid)
         except CRPError:
             return None
 
@@ -304,21 +306,6 @@ class TweetText(object):
             return format(net_worth, ",d")
         else:
             return None
-
-
-    def _get_us_state(self):
-        """
-            Returns a randomly selected US state code.
-        """
-        states = [
-            "AL", "AK", "AZ", "AR", "CA", "CO", "CT", "DC", "DE", "FL", "GA", 
-            "HI", "ID", "IL", "IN", "IA", "KS", "KY", "LA", "ME", "MD", 
-            "MA", "MI", "MN", "MS", "MO", "MT", "NE", "NV", "NH", "NJ", 
-            "NM", "NY", "NC", "ND", "OH", "OK", "OR", "PA", "RI", "SC", 
-            "SD", "TN", "TX", "UT", "VT", "VA", "WA", "WV", "WI", "WY"
-        ]
-
-        return random.choice(states)
 
 
     def _get_gender_pronoun(self, gender_id):
