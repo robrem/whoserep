@@ -98,7 +98,7 @@ class TweetText(object):
 
         try:
             if not cid:
-                f = open('data/cids.txt','r')
+                f = open('data/cids.txt','rb')
                 cids_all = json.load(f)
                 f.close()
                 cid = random.choice(cids_all)
