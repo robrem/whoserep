@@ -80,7 +80,7 @@ class TweetText(object):
                 and tries > 0):
             spprt_text = self._get_support_text()
             final_text = main_text + " " + spprt_text
-            tries -= tries
+            tries -= 1
 
         if (tries==0):
             return main_text
