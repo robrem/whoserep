@@ -34,6 +34,8 @@ You may either rename *sample.config.py* as *config.py* and enter your keys ther
 ### Run it
 Before running the bot, you first need to generate the data/cids.txt file. This file contains all of the CIDs (Candidate IDs) used by OpenSecrets.org to uniquely identify legislators.
 
+**Note:** This will make 51 calls to the getLegislators method API endpoint. Your daily call limit for this endpoint is 200.
+
 Generate the file by running:
 ```python
 python build_cids.py
