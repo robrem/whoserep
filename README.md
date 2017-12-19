@@ -32,6 +32,14 @@ You may either rename *sample.config.py* as *config.py* and enter your keys ther
 ```
 
 ### Run it
+Before running the bot, you first need to generate the data/cids.txt file. This file contains all of the CIDs (Candidate IDs) used by OpenSecrets.org to uniquely identify legislators.
+
+Generate the file by running:
+```python
+python build_cids.py
+```
+
+Then generate a single tweet:
 ```python
 python bot.py
 ```
