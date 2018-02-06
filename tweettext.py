@@ -13,7 +13,7 @@ except ImportError:
     }
 
 # The max char length for a tweet
-MAX_TWEET_LEN = 140
+MAX_TWEET_LEN = 280
 
 # The most recent year that personal finance disclosure agreements
 # (PFD) were submitted by congress.
