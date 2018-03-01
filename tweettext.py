@@ -98,10 +98,9 @@ class TweetText(object):
 
         try:
             if not cid:
-                f = open('data/cids.txt','rb')
-                cids_all = json.load(f)
-                f.close()
-                cid = random.choice(cids_all)
+                with open('data/cids.txt','rb') as f:
+                    cids_all = json.load(f)
+                    cid = random.choice(cids_all)
 
             cands = self.crp.candidates.get(cid)
         except CRPError:
