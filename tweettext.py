@@ -105,12 +105,10 @@ class TweetText(object):
             cands = self.crp.candidates.get(cid)
         except CRPError:
             return None
-
-        cands_len = len(cands)
         
-        if cands_len > 1:
+        if len(cands) > 1:
             cand = random.choice(cands)
-        elif cands_len == 1:
+        elif len(cands) == 1:
             cand = cands
         else:
             return None
@@ -140,11 +138,9 @@ class TweetText(object):
         except CRPError:
             return None
 
-        contribs_len = len(contribs)
-
-        if contribs_len > 1:
+        if len(contribs) > 1:
             contrib = random.choice(contribs)
-        elif contribs_len == 1:
+        elif len(contribs) == 1:
             contrib = contribs
         else:
             return None
