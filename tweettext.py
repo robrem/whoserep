@@ -24,6 +24,7 @@ class TweetTextError(Exception):
     """
         Exception for general TweetText errors.
     """
+    pass
 
 
 class TweetText(object):
